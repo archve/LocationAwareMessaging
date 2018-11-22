@@ -1,102 +1,89 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from mainlogic import mgo
+from haversine import haversine
+import hashlib
 
-port = 8081
+# format
+class mgo:
 
+    def __init__(self):
+        self.Users = {}
+        self.table = {}
+        self.token = "21234589jkjidjfoai"
+        self.messages = {}
+        self.msgid = 0
 
-# User related
-NEW_USER = '/new/user'  # {username, password}
-LOGIN = '/login'  # {username, password}
+    def user_exists(self,user,password):
+        """Change logic to get info from db or firebase"""
+        if user in self.Users:
+            return True       ## Raise Exception
+        else:
+            return False
 
-# Location related
-UPDATE_LOCATION =  '/new/location'  # {username, token, name, is_gps, location_json }
+    def update_user(self,username,password):
+        """Update username and password to db<Update this to communicate with firebase>"""
+        self.Users[username] = password
+        return token
 
-# Message realted
-NEW_MESSAGE = '/new/message'  # {username, message,location}
-GET_LOCATION_MESSAGES = '/get/message/loc' # {username, token, curr_coord}
+    def add_user(self,username,password):
+        """Add new usser to db"""
 
-mgo = mgo()
+        if user_exists(username)
+            pass   # later pass message user exists
+        else:
+            token = update_user(username,password)
+            return token
 
-class Server(BaseHTTPRequestHandler):
+    def login(self,username,password):
+        """Logs user in the system <Needs to get data from firebase>"""
+        if username in self.Users[username]:                  ##Update logic
+            if password == self.Users[username]:
+                return self.token
+        if res is None:
+            return None  # login failed
 
-        def __init__(self, *args, **kwargs):
-            self.HANDLERS = {
-            LOGIN: self.login,
-            NEW_USER: self.add_user,
-            UPDATE_LOCATION: self.add_location,
-            NEW_MESSAGE: self.add_message,
-            GET_LOCATION_MESSAGES: self.get_my_messages,
-        }
-        super(Server, self).__init__(*args, **kwargs)
+    def push_to_users(self,id,mloc,radius):
+        """Retrieves a list of matching users for the location within give
+           radius
+        """
+        for user in self.users:
+            uloc = self.users[user]
+            if in_range(mloc,uloc,radius):
+                return True
+            else:
+                return False
+            self.user[id]["inbox"].append(id)                           ## List of user ids appended to user inbox ## set expiry for user messages
 
-        def do_GET(self):
-            path = self.path
-            json_content = self.headers['content']
-            json_dict = json.loads(json_content)
-            handler_function = self.HANDLERS.get(self.path,self.invalid_endpoint_err)
-            handler_function(json_dict)
+    def add_message(self,username,message,location,radius = 5):
+        """Add a new message to the messages dictionary"""
+        #### USE pandas or sql lite db to or get from firebase
+        id = self.msgid + 1
+        self.messages[id] = {"username":username,"message" : message ,"loc":location}
+        self.push_to_users(id,location,radius)
 
-        def do_POST(self):
-            path = self.path
-            json_content = self.rfile.read(int(self.headers['Content-Length']))
-            json_dict = json.loads(json_content)
-            handler_function = self.HANDLERS.get(self.path,self.invalid_endpoint_err)
-            handler_function(json_dict)
+    def get_messages_user(self,uid,location):
+        """Returns all messages in given latitude and longitude range"""
+        res = [self.messages[id] for id in self.users[uid]["inbox"]]
+        return res
 
-        def login(self, args):
-            token = mgo.login(args['username'], args['password'])
-            if token is None:
-                    self.send_response(401)
-                    self.send_header('Content-type','text/html')
-                    self.end_headers()
-                    return
+    def get_msg_ids(location):
+        """Get all messges in the location range""" ###### Not needed
+        ids = []
+        for id in self.messages:
+            if is_range(location,self.messages[id][location],radius):
+                ids.append(ids)
+        return ids
 
-            ret_json = {'token':token.decode()}
-            self._send_OK_headers()
-            self._respond_json(ret_json)
-
-
-        def invalid_endpoint_err(self, args):
-            self._send_UNAUTH_headers('\'{}\' is an invalid endpoint.'.format(self.path))
-
-
-        def add_message(self, args):
-             # {
-             #    username, token, title, location_name, text, is_centralized,
-             #    is_black_list, properties, valid_from?, valid_until?
-             # }
-
-             username, token = self._parse_auth(args)
-             title = args['title']
-             location_name = args['location_name']
-             location = None
-
-             mgo.add_message(username, token,
-             title=title, location=location,
-             text=text, is_centralized=is_centralized, is_black_list=is_black_list,
-             valid_from=valid_from, valid_until=valid_until, properties=properties)
-
-             self._send_OK_headers()
-
-        def get_my_messages(self, args):
-            username, token = self._parse_auth(args)
-            ## Get messages of the user
-            msg_list = mgo.get_my_messages(username, token)
-            #Pack messages into json
-            #Respond
-            res = [self._msg_to_json_dict(msg) for msg in msg_list]
-            self._respond_json(res)
-
-
-def run():
-    print('Starting server on port {}...'.format(port))
-
-    # Server settings
-    server_address = ('', port)
-    httpd = HTTPServer(server_address, Server)
-    print('Server is running!')
-
-    httpd.serve_forever()
-
-if __name__=='__main__':
-    run()
+    def in_range(location1,location2,radius):
+        """Checks if corodinates are in is_range
+            Formula for Haversine Distance Algorithm between two places
+            R = earth’s radius (mean radius = 6,371km)
+            Δlat = lat2− lat1
+            Δlong = long2− long1
+            a = sin²(Δlat/2) + cos(lat1).cos(lat2).sin²(Δlong/2)
+            c = 2.atan2(√a, √(1−a))
+            d = R.c
+        """
+        distance = haversine(location1,location2)
+        if distance <= radius:
+            return True
+        else:
+            return False
