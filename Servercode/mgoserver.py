@@ -62,8 +62,7 @@ class Server(BaseHTTPRequestHandler):
 
         def add_message(self, args):
              # {
-             #    username, token, title, location_name, text, is_centralized,
-             #    is_black_list, properties, valid_from?, valid_until?
+             #    username, location, text
              # }
 
              username, token = self._parse_auth(args)
@@ -71,10 +70,8 @@ class Server(BaseHTTPRequestHandler):
              location_name = args['location_name']
              location = None
 
-             mgo.add_message(username, token,
-             title=title, location=location,
-             text=text, is_centralized=is_centralized, is_black_list=is_black_list,
-             valid_from=valid_from, valid_until=valid_until, properties=properties)
+             mgo.add_message(username, location=location,
+             message=text)
 
              self._send_OK_headers()
 
