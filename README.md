@@ -10,3 +10,5 @@ The Code of the app can be accessed from [here](https://github.com/twinkle7/seco
 # Flow of events in the App
 
 ![alt text](https://github.com/archve/LocationAwareMessaging/blob/master/systemflow.PNG)
+
+Note : The server and the application is not integrated yet. Code for a seemlessly working application will be updated soon.
